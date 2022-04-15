@@ -9,7 +9,6 @@ app = Flask(__name__)
 # Connector
 db_name = "exercise_db"
 connectString = os.getenv('db.connect')
-app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://root:admin@localhost:3306/exercise_db"
 
 db = SQLAlchemy(app)
 
