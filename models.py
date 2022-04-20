@@ -24,10 +24,6 @@ class Exercise(db.Model):
     def __repr__(self):
         return '<Product %d>' % self.id
 
-
-db.create_all()
-
-
 class ExerciseSchema(SQLAlchemySchema):
     class Meta(SQLAlchemySchema.Meta):
         model = Exercise
