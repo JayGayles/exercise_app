@@ -2,9 +2,13 @@ from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow_sqlalchemy import SQLAlchemySchema
 from marshmallow import fields
+from dotenv import load_dotenv
 import os
 
+
 app = Flask(__name__)
+
+load_dotenv('.env')
 
 # Connector
 db_name = "exercise_db"
