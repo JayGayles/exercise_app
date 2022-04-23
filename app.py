@@ -5,20 +5,21 @@ from marshmallow import fields
 from dotenv import load_dotenv
 import os
 
-
 app = Flask(__name__)
 
 load_dotenv('.env')
 
 # Connector
 db_name = "exercise_db"
+connectString = os.getenv('db.connect')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 
 db = SQLAlchemy(app)
 
+
 # Model
 class Exercise(db.Model):
-    __tablename__ = 'exercise'
+    __tablename__ = 'exercises'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     primary = db.Column(db.String(50))
