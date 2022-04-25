@@ -19,6 +19,7 @@ db = SQLAlchemy(app)
 
 # Model
 class Exercise(db.Model):
+
     __tablename__ = 'exercises'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
@@ -28,6 +29,11 @@ class Exercise(db.Model):
     mechanics = db.Column(db.String(50))
     equipment = db.Column(db.String(50))
     directions = db.Column(db.String(3000))
+
+    def create(self):
+        db.session.add(self)
+        db.session.commit()
+        return self
 
     def __init__(self, name, primary, secondary, function, mechanics, equipment, directions):
         self.name = name
@@ -39,7 +45,7 @@ class Exercise(db.Model):
         self.directions = directions
 
     def __repr__(self):
-        return '<Product %d>' % self.id
+        return '<Exercise %d>' % self.id
 
 
 db.create_all()
@@ -68,6 +74,7 @@ def hello_world():
 
 
 # Route to display all exercises
+
 @app.route('/exercises', methods=['GET'])
 def index():
     get_exercises = Exercise.query.all()
@@ -76,30 +83,13 @@ def index():
     return make_response(jsonify({"exercises": exercise}))
 
 
-# Route to display all leg exercises
-@app.route('/legs', methods=['GET'])
-def legs():
-    get_legs = Exercise.query.filter_by(primary='legs').order_by(Exercise.id).all()
-    exercise_schema = ExerciseSchema(many=True)
-    exercise = exercise_schema.dump(get_legs)
-    return make_response(jsonify({"exercises": exercise}))
-
-
-# Route to display all chest exercises
-@app.route('/chest', methods=['GET'])
-def chest():
-    get_chest = Exercise.query.filter_by(primary='chest').order_by(Exercise.id).all()
-    exercise_schema = ExerciseSchema(many=True)
-    exercise = exercise_schema.dump(get_chest)
-    return make_response(jsonify({"exercises": exercise}))
-
-
-# Route to display all chest/leg exercises
-@app.route('/chestlegs', methods=['GET'])
-def chestleg():
-    get_chestleg = Exercise.query.filter(primary=('chest' | 'legs')).order_by(Exercise.id).all()
-    exercise_schema = ExerciseSchema(many=True)
-    exercise = exercise_schema.dump(get_chest)
+@app.route('/exercises', methods = ['POST'])
+def create_exercise():
+    data = request.get_json()
+    exercise_schema = ExerciseSchema()
+    exercise = exercise_schema.load(data)
+    result = exercise_schema.dump(exercise.create()).data
+    return make_response(jsonify({"exercises": exercise}), 201)
 
 
 if __name__ == "__main__":
