@@ -16,7 +16,6 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 
 db = SQLAlchemy(app)
 
-
 # Model
 class Exercise(db.Model):
 
@@ -30,11 +29,6 @@ class Exercise(db.Model):
     equipment = db.Column(db.String(50))
     directions = db.Column(db.String(3000))
 
-    def create(self):
-        db.session.add(self)
-        db.session.commit()
-        return self
-
     def __init__(self, name, primary, secondary, function, mechanics, equipment, directions):
         self.name = name
         self.primary = primary
@@ -43,6 +37,11 @@ class Exercise(db.Model):
         self.mechanics = mechanics
         self.equipment = equipment
         self.directions = directions
+
+    def create(self):
+        db.session.add(self)
+        db.session.commit()
+        return self
 
     def __repr__(self):
         return '<Exercise %d>' % self.id
@@ -83,13 +82,21 @@ def index():
     return make_response(jsonify({"exercises": exercise}))
 
 
-@app.route('/exercises', methods = ['POST'])
+@app.route('/exercises', methods=['POST'])
 def create_exercise():
     data = request.get_json()
     exercise_schema = ExerciseSchema()
     exercise = exercise_schema.load(data)
-    result = exercise_schema.dump(exercise.create()).data
+    result = exercise_schema.dump(exercise.update(exercise))
     return make_response(jsonify({"exercises": exercise}), 201)
+
+#    data = request.get_json()
+ #   print(data)
+  #  exercise_schema = ExerciseSchema()
+    #exercise = exercise_schema.load(data)
+    #result = exercise_schema.dump(data.update())
+    #return make_response(jsonify({"exercises": exercise}), 201)
+   # return
 
 
 if __name__ == "__main__":
