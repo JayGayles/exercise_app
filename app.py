@@ -87,7 +87,8 @@ def create_exercise():
     data = request.get_json()
     exercise_schema = ExerciseSchema()
     exercise = exercise_schema.load(data)
-    result = exercise_schema.dump(exercise.update(exercise))
+    print(exercise)
+    result = exercise_schema.dump(exercise.create())
     return make_response(jsonify({"exercises": exercise}), 201)
 
 #    data = request.get_json()
