@@ -4,23 +4,27 @@ from marshmallow_sqlalchemy import SQLAlchemySchema
 from marshmallow import fields
 from dotenv import load_dotenv
 import os
+import sqlite3
+
 
 app = Flask(__name__)
 
+
+# database connector
+
 load_dotenv('.env')
 
-# Connector
-db_name = "exercise_db"
-connectString = os.getenv('db.connect')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 
 db = SQLAlchemy(app)
 
 # Model
+
+
 class Exercise(db.Model):
 
     __tablename__ = 'exercises'
-    id = db.Column(db.Integer, primary_key=True)
+    index = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     primary = db.Column(db.String(50))
     secondary = db.Column(db.String(50))
@@ -44,7 +48,7 @@ class Exercise(db.Model):
         return self
 
     def __repr__(self):
-        return '<Exercise %d>' % self.id
+        return '<Exercise %d>' % self.index
 
 
 db.create_all()
@@ -55,7 +59,7 @@ class ExerciseSchema(SQLAlchemySchema):
         model = Exercise
         sqla_session = db.session
 
-    id = fields.Number(dump_only=True)
+    index = fields.Number(dump_only=True)
     name = fields.String(required=True)
     primary = fields.String(required=True)
     secondary = fields.String(required=True)
@@ -83,21 +87,16 @@ def index():
 
 
 @app.route('/exercises', methods=['POST'])
-def create_exercise():
-    data = request.get_json()
-    exercise_schema = ExerciseSchema()
-    exercise = exercise_schema.load(data)
-    print(exercise)
-    result = exercise_schema.dump(exercise.create())
-    return make_response(jsonify({"exercises": exercise}), 201)
+def add_exercise():
 
-#    data = request.get_json()
- #   print(data)
-  #  exercise_schema = ExerciseSchema()
-    #exercise = exercise_schema.load(data)
-    #result = exercise_schema.dump(data.update())
+    conn = sqlite3.connect('exercises_db.db')
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO exercises (name, primary, secondary, function, mechanics, equipment, "
+                   "directions) "
+                   "VALUES (%s, %s, %s, %s, %s, %s, %s)" %
+                   (name, primary, secondary, function, mechanics, equipment, directions))
     #return make_response(jsonify({"exercises": exercise}), 201)
-   # return
+    return
 
 
 if __name__ == "__main__":
