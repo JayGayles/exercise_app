@@ -1,10 +1,9 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, flash
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow_sqlalchemy import SQLAlchemySchema
 from marshmallow import fields
 from dotenv import load_dotenv
 import os
-import sqlite3
 
 
 app = Flask(__name__)
@@ -83,20 +82,19 @@ def index():
     get_exercises = Exercise.query.all()
     exercise_schema = ExerciseSchema(many=True)
     exercise = exercise_schema.dump(get_exercises)
+    print(type(get_exercises))
     return make_response(jsonify({"exercises": exercise}))
 
 
 @app.route('/exercises', methods=['POST'])
-def add_exercise():
-
-    conn = sqlite3.connect('exercises_db.db')
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO exercises (name, primary, secondary, function, mechanics, equipment, "
-                   "directions) "
-                   "VALUES (%s, %s, %s, %s, %s, %s, %s)" %
-                   (name, primary, secondary, function, mechanics, equipment, directions))
-    #return make_response(jsonify({"exercises": exercise}), 201)
-    return
+def create_exercise():
+    data = request.get_json()
+    print(data)
+    exercise_schema = ExerciseSchema()
+    exercise = exercise_schema.load(data)
+    print(exercise)
+    result = exercise_schema.dump(exercise.update())
+    return make_response(jsonify({"exercises": exercise}), 201)
 
 
 if __name__ == "__main__":
