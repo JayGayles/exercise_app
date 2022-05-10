@@ -87,13 +87,11 @@ def index():
 
 
 @app.route('/exercises', methods=['POST'])
-def create_exercise():
-    data = request.get_json()
-    print(data)
-    exercise_schema = ExerciseSchema()
-    exercise = exercise_schema.load(data)
-    print(exercise)
-    result = exercise_schema.dump(exercise.update())
+def create_exercise(exercise):
+    schema = ExerciseSchema()
+    new_exercise = schema.load(exercise, session=db.session).data
+    db.session.add(new_exercise)
+    db.session.commit()
     return make_response(jsonify({"exercises": exercise}), 201)
 
 
