@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, make_response, flash
 from flask_sqlalchemy import SQLAlchemy
 from marshmallow_sqlalchemy import SQLAlchemySchema
-from marshmallow import fields
+from marshmallow import Schema, fields
 from dotenv import load_dotenv
 import os
 
@@ -87,9 +87,9 @@ def index():
 
 
 @app.route('/exercises', methods=['POST'])
-def create_exercise(exercise):
+def create_exercise():
     schema = ExerciseSchema()
-    new_exercise = schema.load(exercise, session=db.session).data
+    new_exercise = schema.load(Exercise, session=db.session).data
     db.session.add(new_exercise)
     db.session.commit()
     return make_response(jsonify({"exercises": exercise}), 201)
