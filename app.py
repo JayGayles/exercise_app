@@ -88,10 +88,19 @@ def index():
 
 @app.route('/exercises', methods=['POST'])
 def create_exercise():
-    schema = ExerciseSchema()
-    new_exercise = schema.load(Exercise, session=db.session).data
-    db.session.add(new_exercise)
+    data = request.get_json()
+    print(data)
+    exercise = Exercise(data['name'],
+                        data['primary'],
+                        data['secondary'],
+                        data['function'],
+                        data['mechanics'],
+                        data['equipment'],
+                        data['directions'])
+    exercise.from_dict(data, new_exercise=True)
+    db.session.add(exercise)
     db.session.commit()
+    response = jsonify(exercise.to_dict())
     return make_response(jsonify({"exercises": exercise}), 201)
 
 
