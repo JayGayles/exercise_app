@@ -97,10 +97,10 @@ def create_exercise():
                         data['mechanics'],
                         data['equipment'],
                         data['directions'])
-    exercise.from_dict(data, new_exercise=True)
     db.session.add(exercise)
     db.session.commit()
-    response = jsonify(exercise.to_dict())
+
+    response = jsonify(exercise)
     return make_response(jsonify({"exercises": exercise}), 201)
 
 
