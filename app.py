@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify, make_response, flash
+from flask import Flask, request, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
+from flask_marshmallow import Marshmallow
 from marshmallow_sqlalchemy import SQLAlchemySchema
 from marshmallow import Schema, fields
 from dotenv import load_dotenv
@@ -10,20 +11,23 @@ app = Flask(__name__)
 
 
 # database connector
-
 load_dotenv('.env')
 
+# Database
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 
+# Init db
 db = SQLAlchemy(app)
 
-# Model
+# Init ma
+ma = Marshmallow(app)
 
+#Exercise Class/Model
 
 class Exercise(db.Model):
 
     __tablename__ = 'exercises'
-    index = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     primary = db.Column(db.String(50))
     secondary = db.Column(db.String(50))
@@ -85,7 +89,7 @@ def index():
     print(type(get_exercises))
     return make_response(jsonify({"exercises": exercise}))
 
-
+# POST API to add new exercise
 @app.route('/exercises', methods=['POST'])
 def create_exercise():
     data = request.get_json()
