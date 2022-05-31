@@ -58,6 +58,7 @@ db.create_all()
 
 # Exercise Schema
 
+
 class ExerciseSchema(ma.Schema):
     class Meta:
         fields = ('index', 'name', 'primary', 'secondary', 'function', 'mechanics', 'equipment', 'directions')
@@ -84,15 +85,17 @@ def index():
     return make_response(jsonify({"exercises": exercise}))
 
 # POST API to add new exercise
+
+
 @app.route('/exercises', methods=['POST'])
 def add_exercise():
-    name = request.get_json('name')
-    primary = request.get_json('primary')
-    secondary = request.get_json('secondary')
-    function = request.get_json('function')
-    mechanics = request.get_json('mechanics')
-    equipment = request.get_json('equipment')
-    directions = request.get_json('directions')
+    name = request.json('name')
+    primary = request.json('primary')
+    secondary = request.json('secondary')
+    function = request.json('function')
+    mechanics = request.json('mechanics')
+    equipment = request.json('equipment')
+    directions = request.json('directions')
 
     new_exercise = Exercise(name, primary, secondary, function, mechanics, equipment, directions)
     db.session.add(new_exercise)
