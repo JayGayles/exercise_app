@@ -27,7 +27,7 @@ ma = Marshmallow(app)
 class Exercise(db.Model):
 
     __tablename__ = 'exercises'
-    id = db.Column(db.Integer, primary_key=True)
+    index = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     primary = db.Column(db.String(50))
     secondary = db.Column(db.String(50))
@@ -56,21 +56,15 @@ class Exercise(db.Model):
 
 db.create_all()
 
+# Exercise Schema
 
-class ExerciseSchema(SQLAlchemySchema):
-    class Meta(SQLAlchemySchema.Meta):
-        model = Exercise
-        sqla_session = db.session
+class ExerciseSchema(ma.Schema):
+    class Meta:
+        fields = ('index', 'name', 'primary', 'secondary', 'function', 'mechanics', 'equipment', 'directions')
 
-    index = fields.Number(dump_only=True)
-    name = fields.String(required=True)
-    primary = fields.String(required=True)
-    secondary = fields.String(required=True)
-    function = fields.String(required=True)
-    mechanics = fields.String(required=True)
-    equipment = fields.String(required=True)
-    directions = fields.String(required=True)
 
+# Init Schema
+exercise_schema = ExerciseSchema()
 
 # Routes
 
@@ -91,21 +85,20 @@ def index():
 
 # POST API to add new exercise
 @app.route('/exercises', methods=['POST'])
-def create_exercise():
-    data = request.get_json()
-    print(data)
-    exercise = Exercise(data['name'],
-                        data['primary'],
-                        data['secondary'],
-                        data['function'],
-                        data['mechanics'],
-                        data['equipment'],
-                        data['directions'])
-    db.session.add(exercise)
+def add_exercise():
+    name = request.get_json('name')
+    primary = request.get_json('primary')
+    secondary = request.get_json('secondary')
+    function = request.get_json('function')
+    mechanics = request.get_json('mechanics')
+    equipment = request.get_json('equipment')
+    directions = request.get_json('directions')
+
+    new_exercise = Exercise(name, primary, secondary, function, mechanics, equipment, directions)
+    db.session.add(new_exercise)
     db.session.commit()
 
-    response = jsonify(exercise)
-    return make_response(jsonify({"exercises": exercise}), 201)
+    return exercise_schema.jsonify(new_exercise)
 
 
 if __name__ == "__main__":
