@@ -1,0 +1,1 @@
+ALTER TABLE exercise_db.exercise MODIFY id int NOT NULL AUTO_INCREMENT;

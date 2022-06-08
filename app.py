@@ -24,10 +24,11 @@ ma = Marshmallow(app)
 
 #Exercise Class/Model
 
+
 class Exercise(db.Model):
 
-    __tablename__ = 'exercises'
-    index = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'exercise'
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100))
     primary = db.Column(db.String(50))
     secondary = db.Column(db.String(50))
@@ -45,13 +46,8 @@ class Exercise(db.Model):
         self.equipment = equipment
         self.directions = directions
 
-    def create(self):
-        db.session.add(self)
-        db.session.commit()
-        return self
-
     def __repr__(self):
-        return '<Exercise %d>' % self.index
+        return '<Exercise %d>' % self.id
 
 
 db.create_all()
@@ -61,7 +57,7 @@ db.create_all()
 
 class ExerciseSchema(ma.Schema):
     class Meta:
-        fields = ('index', 'name', 'primary', 'secondary', 'function', 'mechanics', 'equipment', 'directions')
+        fields = ('id', 'name', 'primary', 'secondary', 'function', 'mechanics', 'equipment', 'directions')
 
 
 # Init Schema
@@ -74,7 +70,7 @@ def hello_world():
     return "Hello, World!"
 
 
-# Route to display all exercises
+# Endpoint to retrieve all exercises
 
 @app.route('/exercises', methods=['GET'])
 def index():
@@ -84,24 +80,68 @@ def index():
     print(type(get_exercises))
     return make_response(jsonify({"exercises": exercise}))
 
-# POST API to add new exercise
+# Endpoint to retrieve single exercise
+
+
+@app.route('/exercises/<id>', methods=['GET'])
+def get_exercise_by_id(id):
+    exercise = Exercise.query.get(id)
+    return exercise_schema.jsonify(exercise)
+
+# Endpoint to add new exercise
 
 
 @app.route('/exercises', methods=['POST'])
 def add_exercise():
-    name = request.json('name')
-    primary = request.json('primary')
-    secondary = request.json('secondary')
-    function = request.json('function')
-    mechanics = request.json('mechanics')
-    equipment = request.json('equipment')
-    directions = request.json('directions')
-
+    name = request.json['name']
+    primary = request.json['primary']
+    secondary = request.json['secondary']
+    function = request.json['function']
+    mechanics = request.json['mechanics']
+    equipment = request.json['equipment']
+    directions = request.json['directions']
     new_exercise = Exercise(name, primary, secondary, function, mechanics, equipment, directions)
+
     db.session.add(new_exercise)
     db.session.commit()
 
     return exercise_schema.jsonify(new_exercise)
+
+# Endpoint to update exercise
+
+
+@app.route('/exercises/<id>', methods=['PUT'])
+def update_exercise(id):
+    exercise = Exercise.query.get(id)
+    name = request.json['name']
+    primary = request.json['primary']
+    secondary = request.json['secondary']
+    function = request.json['function']
+    mechanics = request.json['mechanics']
+    equipment = request.json['equipment']
+    directions = request.json['directions']
+
+    exercise.name = name
+    exercise.primary = primary
+    exercise.secondary = secondary
+    exercise.function = function
+    exercise.mechanics = mechanics
+    exercise.equipment = equipment
+    exercise.directions = directions
+    db.session.commit()
+
+    return exercise_schema.jsonify(exercise)
+
+# Endpoint for deleting a record
+
+
+@app.route("/exercises/<id>", methods=["DELETE"])
+def delete_exercise(id):
+    exercise = Exercise.query.get(id)
+    db.session.delete(exercise)
+    db.session.commit()
+
+    return "Exercise was successfully deleted"
 
 
 if __name__ == "__main__":
