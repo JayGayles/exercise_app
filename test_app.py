@@ -2,7 +2,6 @@ import pytest
 from app import app, db
 from models import Exercise
 
-
 @pytest.fixture
 def client():
     app.config['TESTING'] = True
@@ -91,3 +90,108 @@ def test_delete_exercise(client):
     # Verify it was removed from the database
     exercises = Exercise.query.all()
     assert len(exercises) == 0
+
+# Fixture to set up the testing client and database
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with app.test_client() as client:
+        with app.app_context():
+            db.create_all()
+        yield client
+        with app.app_context():
+            db.session.remove()
+            db.drop_all()
+
+# Test root endpoint
+def test_hello_world(client):
+    response = client.get('/')
+    assert response.status_code == 200
+    assert response.data == b"Hello, World!"
+
+# Test case-insensitive input handling for /generateworkout
+def test_generate_workout_case_insensitive(client):
+    db.session.add(Exercise(name="Squat", primary="Legs", secondary="Glutes", function="Strength",
+                            mechanics="Compound", equipment="Barbell", directions="Perform a squat."))
+    db.session.commit()
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["legs"]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Legs" in data["workout_plan"]
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["LEGS"]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Legs" in data["workout_plan"]
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["LeGs"]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Legs" in data["workout_plan"]
+
+# Test punctuation handling for /generateworkout
+def test_generate_workout_punctuation(client):
+    db.session.add(Exercise(name="Squat", primary="Legs", secondary="Glutes", function="Strength",
+                            mechanics="Compound", equipment="Barbell", directions="Perform a squat."))
+    db.session.add(Exercise(name="Bench Press", primary="Chest", secondary="Triceps", function="Strength",
+                            mechanics="Compound", equipment="Barbell", directions="Press the barbell up."))
+    db.session.commit()
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["legs!"]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Legs" in data["workout_plan"]
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["chest, legs"]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Chest" in data["workout_plan"]
+    assert "Legs" in data["workout_plan"]
+
+# Test input with spaces for /generateworkout
+def test_generate_workout_spaces(client):
+    db.session.add(Exercise(name="Squat", primary="Legs", secondary="Glutes", function="Strength",
+                            mechanics="Compound", equipment="Barbell", directions="Perform a squat."))
+    db.session.commit()
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["  legs  "]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Legs" in data["workout_plan"]
+
+# Test special characters in input for /generateworkout
+def test_generate_workout_special_characters(client):
+    db.session.add(Exercise(name="Squat", primary="Legs", secondary="Glutes", function="Strength",
+                            mechanics="Compound", equipment="Barbell", directions="Perform a squat."))
+    db.session.commit()
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["le!gs"]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Legs" in data["workout_plan"]
+
+# Test combined inputs for /generateworkout
+def test_generate_workout_combined_inputs(client):
+    db.session.add(Exercise(name="Squat", primary="Legs", secondary="Glutes", function="Strength",
+                            mechanics="Compound", equipment="Barbell", directions="Perform a squat."))
+    db.session.commit()
+
+    response = client.post('/generateworkout', json={"muscle_groups": [" L*e@g,s! "]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Legs" in data["workout_plan"]
+
+# Test no matching exercises for given input
+def test_generate_workout_no_matching_exercises(client):
+    db.session.add(Exercise(name="Squat", primary="Legs", secondary="Glutes", function="Strength",
+                            mechanics="Compound", equipment="Barbell", directions="Perform a squat."))
+    db.session.commit()
+
+    response = client.post('/generateworkout', json={"muscle_groups": ["arms"]})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "Arms" in data["workout_plan"]
+    assert len(data["workout_plan"]["Arms"]) == 0
